@@ -59,7 +59,7 @@ flutter:
     # - images/a_dot_ham.jpeg
     - assets/Images/profile.png
     - assets/Images/baseline_account_box_black_18dp.png
-    # - assets/riv/sucessCheck.flr
+    - assets/riv/sucessCheck.flr2d
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

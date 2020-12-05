@@ -1,8 +1,7 @@
 import 'package:crowd_funding/app_screens/Dashboard.dart';
 import 'package:crowd_funding/app_screens/Logo.dart';
+import 'package:crowd_funding/app_screens/MyFundraiseDetailView.dart';
 import 'package:firebase_core/firebase_core.dart';
-// import 'package:flutter/material.dart';
-
 import 'package:flutter/material.dart';
 
 bool USE_FIRESTORE_EMULATOR = false;

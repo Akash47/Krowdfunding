@@ -4,6 +4,8 @@ import 'Registration.dart';
 import 'Dashboard.dart';
 import 'authentication.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crowd_funding/model/User.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auths;
 
 class Login extends StatefulWidget {
@@ -19,6 +21,9 @@ class _LoginForm extends State<Login> {
   final email = TextEditingController();
   final password = TextEditingController();
   auths.FirebaseAuth auth = auths.FirebaseAuth.instance;
+  CollectionReference firebaseUsers =
+      FirebaseFirestore.instance.collection('UserProfile');
+       User aUser = new User();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,8 +141,8 @@ class _LoginForm extends State<Login> {
                                         ));
                                   }
                                 });
-                                Scaffold.of(context).showSnackBar(
-                                    SnackBar(content: Text('Processing Data')));
+                                // Scaffold.of(context).showSnackBar(
+                                //     SnackBar(content: Text('Processing Data')));
                               }
                             })),
                   ]),
@@ -159,14 +164,22 @@ class _LoginForm extends State<Login> {
                       child: RaisedButton(
                           color: Colors.blue,
                           onPressed: () {
-                            googleSignIn().whenComplete(() async {
-                              String user = 'akash';
-                              Navigator.of(context).pushReplacement(
+                            googleSignIn().then((value) async {
+                              if(value!=null){
+                                var names=value.displayName.split(" ");
+                                    this.aUser.firstName = names[0];
+                                    this.aUser.lastName = names[1];
+                                    this.aUser.mobileNumber = value.phoneNumber;
+                                    this.aUser.emailId = value.email;
+                               await this.firebaseUsers.doc(value.uid)
+                                    .set(this.aUser.toJson())
+                                    .then((value1) {Navigator.of(context).pushReplacement(
                                   MaterialPageRoute(
                                       builder: (context) =>
-                                          Dashboard(uid: user)));
-                            });
-                          },
+                                          Dashboard(uid: value.uid)));
+                            });}});
+                            }
+                          ,
                           child: Row(
                             children: <Widget>[
                               Padding(
@@ -221,4 +234,5 @@ class _LoginForm extends State<Login> {
       ),
     );
   }
+
 }

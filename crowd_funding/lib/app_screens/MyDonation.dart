@@ -8,13 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'MyFundraiseDetailView.dart';
 import 'Dashboard.dart';
-class FundraiseList extends StatelessWidget {
+class MyDonation extends StatelessWidget {
   String text, uid;
-  FundraiseList(@required this.text, this.uid);
+  MyDonation(  this.text, this.uid);
   // final CollectionReference firebaseEvents =
   //     FirebaseFirestore.instance.collection('Event');
   FileStorage aFileStorage = new FileStorage();
-  List<EventModel> aEventModel;
+  List<EventModel> aEventModel=new List<EventModel>();
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
@@ -59,7 +59,7 @@ class FundraiseList extends StatelessWidget {
                     );
                   },
                   child: new Container(
-                    height: MediaQuery.of(context).size.height / 6,
+                    height: MediaQuery.of(context).size.height / 4,
                     width: MediaQuery.of(context).size.width / 6,
                     child: new Row(
                         mainAxisAlignment: MainAxisAlignment.start,
@@ -103,11 +103,40 @@ class FundraiseList extends StatelessWidget {
                                           fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                                  SizedBox(
-                                    height:
-                                        MediaQuery.of(context).size.height / 18,
+                                  Column(children: [
+                                    new Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Text(
+                                      this.aEventModel
+                                          .elementAt(index)
+                                          .goalAmount.toString(),
+                                      style: new TextStyle(
+                                          fontSize: 18,
+                                          ),
+                                    ),
                                   ),
                                   new Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Text(
+                                      " pledged of",
+                                      style: new TextStyle(
+                                          fontSize: 18,
+                                          ),
+                                    ),
+                                  ),
+                                  new Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Text(
+                                      this.aEventModel
+                                          .elementAt(index)
+                                          .collectedAmount.toString(),
+                                      style: new TextStyle(
+                                          fontSize: 18,
+                                           ),
+                                    ),
+                                  ),
+                                  ],),
+                                   new Align(
                                       alignment: Alignment.bottomLeft,
                                       child: new Container(
                                         width:
@@ -129,16 +158,18 @@ class FundraiseList extends StatelessWidget {
                                                         .width /
                                                     6)),
                                       ))
-                                ],
-                              )),
+                                  ],),
+                                 ),
+                                
                           SizedBox(
-                            width: MediaQuery.of(context).size.width / 19,
+                            width: MediaQuery.of(context).size.width / 16,
+                            height: MediaQuery.of(context).size.height / 28,
                           ),
                           new Align(
                             alignment: Alignment.bottomRight,
                             heightFactor: 5.4,
                             child: new Container(
-                              height: MediaQuery.of(context).size.height / 35,
+                              height: MediaQuery.of(context).size.height / 30,
                               width: MediaQuery.of(context).size.width / 3,
                               // ignore: unrelated_type_equality_checks
                               child: Center(child:currentStatus((DateTime.parse(
@@ -182,19 +213,19 @@ class FundraiseList extends StatelessWidget {
           return new CircularProgressIndicator(strokeWidth:10.0);
         },
       ),
-      floatingActionButton: new FloatingActionButton(
-        child: new Icon(Icons.add),
-        backgroundColor: Theme.of(context).buttonColor,
-        onPressed: () {
-          print(uid);
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => new MyFundraise("My Fundraise",uid),
-            ),
-          );
-        },
-      ),
+      // floatingActionButton: new FloatingActionButton(
+      //   child: new Icon(Icons.add),
+      //   backgroundColor: Theme.of(context).buttonColor,
+      //   onPressed: () {
+      //     print(uid);
+      //     Navigator.push(
+      //       context,
+      //       MaterialPageRoute(
+      //         builder: (context) => new MyFundraise("My Fundraise",uid),
+      //       ),
+      //     );
+      //   },
+      // ),
     );
   }
   Widget noOfLeftDays(DateTime aDate ,int campaginDays){
@@ -220,27 +251,28 @@ class FundraiseList extends StatelessWidget {
   }
   Future<List<EventModel>> retrieveEvent() {
     var completer = new Completer<List<EventModel>>();
-    FirebaseFirestore.instance.collection("Events").where('userId',isEqualTo:uid).get().then((value) async {
-      List<EventModel> aEventModelList = new List<EventModel>();
-      
-      for (var item in value.docs) {
-        
-        await aFileStorage
+    List<EventModel> aEventModelList = new List<EventModel>();
+    FirebaseFirestore.instance.collection("Transactions").where('donorUserId',isEqualTo: uid).get().then((transactionValue) async{
+      for (var itemss in transactionValue.docs) { 
+       var uidPath=itemss.data().values.elementAt(2).toString();
+        await FirebaseFirestore.instance.collection("Events").where('userId',isEqualTo:uidPath).where('projectName',isEqualTo:itemss.data().values.elementAt(3).toString()).get().then((value) async {
+        for (var item in value.docs) {
+         await aFileStorage
             .downloadFile(firebase_storage.FirebaseStorage.instance
                 .ref()
-                .child(uid)
+                .child(uidPath)
                 .child("Documents").child("event"+item.data().values.last.toString()))
             .then((value1) {
-              print("value1 in download");
-              print(value1.first);
           EventModel aEventModel = new EventModel();
           aEventModel = EventModel.fromJson(item.data());
           aEventModel.pictureLocation = value1.first;
           aEventModelList.add(aEventModel);
         });
       }
-      completer.complete(aEventModelList);
+      });
+      }
+       completer.complete(aEventModelList); 
     });
-    return completer.future;
+     return completer.future;
   }
 }

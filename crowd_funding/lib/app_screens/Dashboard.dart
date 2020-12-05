@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crowd_funding/common/FileStorage.dart';
 import 'package:crowd_funding/model/EventModel.dart';
 import 'package:flutter/material.dart';
 import 'Menu.dart';
-
+import 'MyFundraiseDetailView.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 class Dashboard extends StatefulWidget {
@@ -65,7 +64,7 @@ class _DashboardState extends State<Dashboard> {
         ],
         elevation: 15,
       ),
-      drawer: Menu(uid),
+      drawer: Menu(this.uid),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: new CarouselWithIndicatorDemo('', this.uid),
     );
@@ -94,132 +93,278 @@ class _CarouselWithIndicatorState extends State<CarouselWithIndicatorDemo> {
     return FutureBuilder(
       future: retrieveEvent(),
       builder: (context, snapshot) {
-        List<EventModel> aEventModel = snapshot.data;
-        return Column(children: [
-          SizedBox(
-            height: 20,
-          ),
-          CarouselSlider(
-            items: aEventModel.map((item) {
-              EventModel aEvent = item;
-              return Container(
-                child: Container(
-                  margin: EdgeInsets.all(5.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                    child: new Container(
-                      child: new Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            new Align(
-                              alignment: Alignment.centerLeft,
-                              child: new Container(
-                                  child: CircleAvatar(
-                                radius: MediaQuery.of(context).size.width / 8,
-                                child: ClipOval(
-                                  child: new SizedBox(
-                                      width: MediaQuery.of(context).size.width,
+        if (snapshot.hasData) {
+          List<EventModel> aEventModel = snapshot.data;
+          return Column(children: [
+            SizedBox(
+              height: 20,
+            ),
+            CarouselSlider(
+              items: aEventModel.map((item) {
+                EventModel aEvent = item;
+                return InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => new MyFundraiseDetailView(
+                            uid: this.uid,
+                            currentProjectUid: aEvent.userId,
+                            currentProjectName: aEvent.projectName),
+                      ),
+                    );
+                  },
+                  child: Container(
+                     height: MediaQuery.of(context).size.height,
+                    margin: EdgeInsets.all(4.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                      child: new Container(
+                        // height: MediaQuery.of(context).size.height,
+                        child: new Column(
+                            // mainAxisAlignment: MainAxisAlignment.start,
+                            //mainAxisSize: MainAxisSize.max,
+                            children: [
+                              SizedBox(
+                                height: MediaQuery.of(context).size.height / 95,
+                              ),
+                              new Row(
+                                children: [
+                                  SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width / 20,
+                                  ),
+                                  new Align(
+                                    alignment: Alignment.topLeft,
+                                    child: new Container(
+                                        child: CircleAvatar(
+                                      radius:
+                                          MediaQuery.of(context).size.width / 6,
+                                      child: ClipOval(
+                                        child: new SizedBox(
+                                            width: MediaQuery.of(context)
+                                                .size
+                                                .width,
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .height /
+                                                5,
+                                            child: Image.network(
+                                              aEvent.pictureLocation,
+                                              fit: BoxFit.fill,
+                                            )),
+                                      ),
+                                    )),
+                                  ),
+                                  // SizedBox(
+                                  //   width:
+                                  //       MediaQuery.of(context).size.width / ,
+                                  // ),
+                                  Column(
+                                    children: [
+                                      new Align(
+                                        alignment: Alignment.topCenter,
+                                        child: new Text(
+                                          aEvent.projectName,
+                                          style: new TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height:
+                                            MediaQuery.of(context).size.height /
+                                                45,
+                                      ),
+                                      new Align(
+                                        alignment: Alignment.topCenter,
+                                        child: new Text(
+                                          aEvent.goalAmount.toString(),
+                                          style: new TextStyle(
+                                            fontSize: 18,
+                                            // fontWeight: FontWeight.bold
+                                          ),
+                                        ),
+                                      ),
+                                      new Align(
+                                        alignment: Alignment.topCenter,
+                                        child: new Text(
+                                          "pledged Of",
+                                          style: new TextStyle(
+                                            fontSize: 18,
+                                            // fontWeight: FontWeight.bold
+                                          ),
+                                        ),
+                                      ),
+                                      new Align(
+                                        alignment: Alignment.topCenter,
+                                        child: new Text(
+                                          aEvent.collectedAmount.toString(),
+                                          style: new TextStyle(
+                                            fontSize: 18,
+                                            // fontWeight: FontWeight.bold
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                ],
+                              ),
+                              
+                              new Row(
+                                children: [
+                                  SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width / 20,
+                                  ),
+                                  new Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: new Container(
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                4,
+                                        child: Center(
+                                            child: noOfLeftDays(
+                                                (DateTime.parse(
+                                                    aEvent.createdDate)),
+                                                aEvent.campaginDays)),
+                                        decoration: new BoxDecoration(
+                                            color: Colors.grey,
+                                            borderRadius: BorderRadius.circular(
+                                                MediaQuery.of(context)
+                                                        .size
+                                                        .width /
+                                                    6)),
+                                      )),
+                                  SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width / 12,
+                                  ),
+                                  new Align(
+                                    alignment: Alignment.centerRight,
+                                    heightFactor: 5.4,
+                                    child: new Container(
                                       height:
                                           MediaQuery.of(context).size.height /
-                                              5,
-                                      child: Image.network(
-                                        aEvent.pictureLocation,
-                                        fit: BoxFit.fill,
-                                      )),
-                                ),
-                              )),
-                            ),
-                          ]),
-                      decoration: new BoxDecoration(
-                        color: Theme.of(context).primaryColorLight,
-                        borderRadius: BorderRadius.circular(
-                            MediaQuery.of(context).size.width / 8),
+                                              35,
+                                      width:
+                                          MediaQuery.of(context).size.width / 3,
+                                      // ignore: unrelated_type_equality_checks
+                                      child: Center(
+                                          child: currentStatus(
+                                              (DateTime.parse(
+                                                  aEvent.createdDate)),
+                                              aEvent.campaginDays)),
+                                      // ignore: unrelated_type_equality_checks
+                                      decoration: (new DateTime.now()
+                                                  .difference(DateTime.parse(
+                                                      aEvent.createdDate)) ==
+                                              0)
+                                          ? new BoxDecoration(
+                                              color: Colors.green,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          6))
+                                          : new BoxDecoration(
+                                              color: Colors.yellow,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      MediaQuery.of(context)
+                                                              .size
+                                                              .width /
+                                                          6)),
+                                    ),
+                                  )
+                                ],
+                              )
+                            ]),
+                        decoration: new BoxDecoration(
+                          color: Theme.of(context).primaryColorLight,
+                          borderRadius: BorderRadius.circular(
+                              MediaQuery.of(context).size.width / 8),
+                        ),
                       ),
                     ),
+                    //   ),
                   ),
-                ),
-              );
-            }).toList(),
-            options: CarouselOptions(
-                autoPlay: true,
-                enlargeCenterPage: true,
-                aspectRatio: 2.0,
-                onPageChanged: (index, reason) {
-                  setState(() {
-                    _current = index;
-                  });
-                }),
-          ),
-        ]);
+                );
+              }).toList(),
+              options: CarouselOptions(
+                  height: MediaQuery.of(context).size.height / 2.4,
+                  autoPlay: true,
+                  enlargeCenterPage: true,
+                   aspectRatio: 2.0,
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _current = index;
+                    });
+                  }),
+            ),
+          ]);
+        } else
+          return CircularProgressIndicator();
       },
     );
   }
 
-  // Future<List<EventModel>> retrieveEvent() {
-  //   var completer = new Completer<List<EventModel>>();
+  Widget noOfLeftDays(DateTime aDate, int campaginDays) {
+    var leftDays = DateTime.now().difference(aDate).inDays;
+    if (leftDays < campaginDays) {
+      return new Text(
+        (campaginDays - leftDays).toString() + " Days Remain",
+        textAlign: TextAlign.center,
+      );
+    } else if (leftDays == campaginDays) {
+      return new Text(
+        "Today",
+      );
+    } else {
+      return new Text("Time Over");
+    }
+  }
 
-  //   firebaseEvents
-  //       .where('userId', isEqualTo: 'akash')
-  //       .get()
-  //       .then((value) async {
-  //     List<EventModel> aEventModelList = new List<EventModel>();
-  //     for (var item in value.docs) {
-  //       await aFileStorage
-  //           .downloadFile(firebase_storage.FirebaseStorage.instance
-  //               .ref()
-  //               .child('akash')
-  //               .child("image"))
-  //           .then((value) {
-  //         EventModel aEventModel = new EventModel();
-  //         aEventModel = EventModel.fromJson(item.data());
-  //         aEventModel.pictureLocation = value.first;
-  //         aEventModelList.add(aEventModel);
-  //       });
-  //     }
-  //     completer.complete(aEventModelList);
-  //   });
-  //   return completer.future;
-  // }
+  Widget currentStatus(DateTime aDate, int campaginDays) {
+    var leftDays = DateTime.now().difference(aDate).inDays;
+    if (leftDays <= campaginDays) {
+      return new Text("In Progress");
+    } else {
+      return new Text("Finished");
+    }
+  }
+
   Future<List<EventModel>> retrieveEvent() {
     var completer = new Completer<List<EventModel>>();
-    List<EventModel> aEventModelList = new List<EventModel>();
-    EventModel aEventModel = new EventModel();
-    aEventModel.campaginDays = 15;
-    aEventModel.campaginDiscription = 'Help is needed';
-    aEventModel.category = 'Medical';
-    aEventModel.createdDate = '2020-11-21 11:05:26.134260';
-    aEventModel.ownerName = 'sunny';
-    aEventModel.goalAmount = 50000;
-    aEventModel.projectName = 'Cancer';
-    aEventModel.userId = '';
-    aEventModel.pictureLocation =
-        'https://i.picsum.photos/id/9/250/250.jpg?hmac=tqDH5wEWHDN76mBIWEPzg1in6egMl49qZeguSaH9_VI';
-    aEventModelList.add(aEventModel);
-    aEventModel.campaginDays = 25;
-    aEventModel.campaginDiscription = 'Help is needed';
-    aEventModel.category = 'Medical';
-    aEventModel.createdDate = '2020-11-19 11:05:26.134260';
-    aEventModel.ownerName = 'Akash';
-    aEventModel.goalAmount = 1000;
-    aEventModel.projectName = 'Covid';
-    aEventModel.userId = '';
-    aEventModel.pictureLocation =
-        'https://i.picsum.photos/id/9/250/250.jpg?hmac=tqDH5wEWHDN76mBIWEPzg1in6egMl49qZeguSaH9_VI';
-    aEventModelList.add(aEventModel);
-    aEventModel.campaginDays = 25;
-    aEventModel.campaginDiscription = 'Marketing stratgies';
-    aEventModel.category = 'Equity';
-    aEventModel.createdDate = '2020-11-19 11:05:26.134260';
-    aEventModel.ownerName = 'yash';
-    aEventModel.goalAmount = 15000;
-    aEventModel.projectName = 'Aay works';
-    aEventModel.userId = '';
-    aEventModel.pictureLocation =
-        'https://i.picsum.photos/id/9/250/250.jpg?hmac=tqDH5wEWHDN76mBIWEPzg1in6egMl49qZeguSaH9_VI';
-    aEventModelList.add(aEventModel);
-    completer.complete(aEventModelList);
-
+    FirebaseFirestore.instance
+        .collection("Events")
+        .where('userId', isNotEqualTo: uid)
+        .get()
+        .then((value) async {
+      List<EventModel> aEventModelList = new List<EventModel>();
+      print(value.docs);
+      for (var item in value.docs) {
+        EventModel aEventModel = EventModel.fromJson(item.data());
+        var i = aEventModel.eventNo;
+        var currentUid = aEventModel.userId;
+        if (aEventModel.goalAmount > aEventModel.collectedAmount) {
+          await aFileStorage
+              .downloadFile(firebase_storage.FirebaseStorage.instance
+                  .ref()
+                  .child(currentUid.toString())
+                  .child("Documents")
+                  .child("event" + i.toString()))
+              .then((docPics) {
+            EventModel aEventModel = new EventModel();
+            aEventModel = EventModel.fromJson(item.data());
+            aEventModel.pictureLocation = docPics.first;
+            aEventModelList.add(aEventModel);
+          });
+        }
+      }
+      completer.complete(aEventModelList);
+    });
     return completer.future;
   }
 }

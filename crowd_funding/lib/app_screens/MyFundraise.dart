@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crowd_funding/app_screens/Dashboard.dart';
 import 'package:crowd_funding/app_screens/FundraiseList.dart';
 import 'package:crowd_funding/app_screens/TextFField.dart';
 import 'package:crowd_funding/common/FileStorage.dart';
 import 'package:crowd_funding/model/EventModel.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -17,9 +19,10 @@ class MyFundraise extends StatefulWidget {
 }
 
 class MyFundraiseState extends State<MyFundraise> {
-  final String text, uid;
+   String text, uid;
   MyFundraiseState(this.text, this.uid);
   int currentStep = 0;
+  int eventCount=0;
   bool complete = false;
   TextEditingController ownerNameController = TextEditingController();
   TextEditingController projectNameController = TextEditingController();
@@ -30,15 +33,15 @@ class MyFundraiseState extends State<MyFundraise> {
   TextEditingController categoryController = TextEditingController();
   EventModel event = new EventModel();
   final List<DropdownMenuItem> items = [];
-  final List<DropdownMenuItem> yearsOfExp = [];
-  String selectedValueCity;
-  String selectedValueResidence;
+  //final List<DropdownMenuItem> yearsOfExp = [];
+  //String selectedValueCity;
+  //String selectedValueResidence;
   CollectionReference firebaseUsers =
-      FirebaseFirestore.instance.collection('Event');
-
+      FirebaseFirestore.instance.collection('Events');
+  // DocumentReference docFirebaseUer = FirebaseFirestore.instance.doc("event");
   Set<String> path = new Set<String>();
   FileStorage aFileStorage = new FileStorage();
-
+  int count=0;
   PickedFile _imageFile;
   dynamic _pickImageError;
   String _retrieveDataError;
@@ -58,9 +61,7 @@ class MyFundraiseState extends State<MyFundraise> {
       );
       setState(() {
         _imageFile = pickedFile;
-        FileStorage aFileStorage = new FileStorage();
-        aFileStorage.uploadFile(new File(_imageFile.path), uid, "Documents",
-            'document' + (this.imageCount + 1).toString());
+        path.add(_imageFile.path);
       });
     } catch (e) {
       setState(() {
@@ -68,9 +69,18 @@ class MyFundraiseState extends State<MyFundraise> {
       });
     }
   }
+  
 
   @override
   void initState() {
+    FirebaseFirestore.instance.collection("Events").where('userId',isEqualTo:uid).get().then((value) {
+      List <DocumentSnapshot> mydoc =value.docs;
+      print("values in eventdocument");
+      print(mydoc.length);
+      eventCount=mydoc.length;
+      print (value);
+    }
+    );
     items.add(DropdownMenuItem(
       child: Text("Bhopal"),
       value: "Bhopal",
@@ -79,15 +89,22 @@ class MyFundraiseState extends State<MyFundraise> {
 
   next() {
     if (currentStep == 2) {
+       FileStorage aFileStorage = new FileStorage();
+       print(path.length);
+       for(int i=0;i<path.length;i++){
+         aFileStorage.uploadFile(new File(path.elementAt(i)), uid, "Documents",'event'+(eventCount+1).toString(),
+            'document' + (i + 1).toString());
+       }
+        
       this.setEventDetails();
-      firebaseUsers.add(this.event.toJson()).then((value) {
+      firebaseUsers.doc().set(this.event.toJson()).then((value) {
         currentStep + 1 != steps.length
             ? goTo(currentStep + 1)
             : setState(() => complete = true);
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => FundraiseList("My Fundraise", uid),
+            builder: (context) => Dashboard(uid: uid),
           ),
         );
       });
@@ -132,7 +149,7 @@ class MyFundraiseState extends State<MyFundraise> {
     return this.steps = [
       Step(
           title: const Text(
-            'Campagin info',
+            'Campaign info',
             style: TextStyle(color: Colors.white),
           ),
           isActive: isActive(0),
@@ -183,8 +200,8 @@ class MyFundraiseState extends State<MyFundraise> {
                         MediaQuery.of(context).size.width / 3,
                     child: new TextFField(
                       myController: campaginDiscriptionController,
-                      lableTextField: "Campagin Discription",
-                      hintTextField: "Enter The Campagin Discription",
+                      lableTextField: "Campaign Discription",
+                      hintTextField: "Enter The Campaign Discription",
                       suffixIcons: null,
                       maxLine: 8,
                       minLine: 100,
@@ -192,7 +209,7 @@ class MyFundraiseState extends State<MyFundraise> {
                       obscureTexts: false,
                       validInput: (value) {
                         if (value.isEmpty) {
-                          return "Please Enter Campagin Discription";
+                          return "Please Enter Campaign Discription";
                         }
                         return null;
                       },
@@ -238,14 +255,14 @@ class MyFundraiseState extends State<MyFundraise> {
                         MediaQuery.of(context).size.width / 3,
                     child: new TextFField(
                       myController: campaginDaysController,
-                      lableTextField: "Campagin Days",
-                      hintTextField: "Enter The Campagin Days",
+                      lableTextField: "Campaign Days",
+                      hintTextField: "Enter The Campaign Days",
                       suffixIcons: null,
                       obscureTexts: false,
                       aTextInputType: TextInputType.number,
                       validInput: (value) {
                         if (value.isEmpty) {
-                          return "Please Enter Campagin Days";
+                          return "Please Enter Campaign Days";
                         }
                         return null;
                       },
@@ -294,14 +311,7 @@ class MyFundraiseState extends State<MyFundraise> {
           state: isComplete(2),
           isActive: isActive(2),
           title: const Text('Documents', style: TextStyle(color: Colors.white)),
-          content: FutureBuilder(
-            future: downloadDocument(),
-            builder: (context, snapshot) {
-              if (snapshot.data == null) {
-                this.path = new Set<String>();
-              } else
-                this.path = snapshot.data;
-              return new Column(children: [
+          content:new Column(children: [
                 new Container(
                   height: MediaQuery.of(context).size.height -
                       MediaQuery.of(context).size.height / 2,
@@ -332,8 +342,9 @@ class MyFundraiseState extends State<MyFundraise> {
                                 onTap: () {
                                   setState(() {
                                     if (this.path.elementAt(index) != '') {
+                                      print(index);
                                     } else {
-                                      Scaffold.of(context).showSnackBar(
+                                      _scaffoldKey.currentState.showSnackBar(
                                           SnackBar(content: Text('No Image')));
                                     }
                                   });
@@ -389,6 +400,7 @@ class MyFundraiseState extends State<MyFundraise> {
                                         ),
                                       ],
                                     )));
+                                    count++;
                               },
                             ),
                           ),
@@ -397,31 +409,28 @@ class MyFundraiseState extends State<MyFundraise> {
                     ],
                   )),
                 ),
-              ]);
-            },
-          ))
+              ])
+            
+          )
     ];
   }
 
   List<Step> steps;
-  Future<Set<String>> downloadDocument() async {
-    List<String> apathList = List<String>();
-    apathList = await aFileStorage.downloadFile(firebase_storage
-        .FirebaseStorage.instance
-        .ref()
-        .child(uid)
-        .child("Documents"));
-    this.imageCount = apathList.length;
-    return apathList.toSet();
-    ;
-  }
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
         key: _scaffoldKey,
         appBar: new AppBar(
-          title: new Text("Fundraise"),
+          title: new Text("Fundraise",style: TextStyle(color: Colors.white),),
+          leading:IconButton(icon: Icon(Icons.arrow_back), onPressed:(){
+              Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => new FundraiseList("My Fundraise",uid),
+            ),
+          );
+          })
         ),
         body: Theme(
             data: ThemeData(
@@ -445,9 +454,12 @@ class MyFundraiseState extends State<MyFundraise> {
     this.event.campaginDiscription = this.campaginDiscriptionController.text;
     this.event.campaginDays = int.parse(this.campaginDaysController.text);
     this.event.category = this.categoryController.text;
+    this.event.city = this.cityController.text;
     this.event.createdDate = new DateTime.now().toString();
     this.event.goalAmount = int.parse(this.goalAmountController.text);
     this.event.userId = this.uid;
+    this.event.collectedAmount=0;
+    this.event.eventNo=eventCount+1;
   }
 }
 
@@ -483,11 +495,11 @@ class RadioItem extends StatelessWidget {
       ),
     );
   }
+  
 }
-
 class RadioModel {
   bool isSelected;
   final String buttonText;
-
-  RadioModel(this.isSelected, this.buttonText);
+ RadioModel(this.isSelected, this.buttonText);
 }
+
