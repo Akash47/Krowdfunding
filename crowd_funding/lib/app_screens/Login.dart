@@ -4,7 +4,10 @@ import 'Registration.dart';
 import 'Dashboard.dart';
 import 'authentication.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:crowd_funding/model/User.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as auths;
+
 class Login extends StatefulWidget {
   @override
   _LoginForm createState() {
@@ -15,9 +18,12 @@ class Login extends StatefulWidget {
 class _LoginForm extends State<Login> {
   final loginFormKey = GlobalKey<FormState>();
   bool _showPassword = false;
-  final email=TextEditingController();
+  final email = TextEditingController();
   final password = TextEditingController();
   auths.FirebaseAuth auth = auths.FirebaseAuth.instance;
+  CollectionReference firebaseUsers =
+      FirebaseFirestore.instance.collection('UserProfile');
+       User aUser = new User();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,25 +49,25 @@ class _LoginForm extends State<Login> {
                   children: [
                     Container(
                         width: MediaQuery.of(context).size.width -
-                              MediaQuery.of(context).size.width / 8,
+                            MediaQuery.of(context).size.width / 8,
                         height: MediaQuery.of(context).size.height / 8,
                         child: TextFField(
                           obscureTexts: false,
                           myController: email,
                           aTextInputType: TextInputType.emailAddress,
                           maxLenthOfTextField: null,
-                          validInput:(value){
-                               if (value.isEmpty) {
-                                  return "Please Enter Email Id";
-                                }
-                            Pattern pattern=r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
-                              RegExp regex = new RegExp(pattern);
-                              if (!regex.hasMatch(value))
-                                {
-                                  return "Enter Valid Email";
-                                  }
-                             
-                                return null;
+                          validInput: (value) {
+                            if (value.isEmpty) {
+                              return "Please Enter Email Id";
+                            }
+                            Pattern pattern =
+                                r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+                            RegExp regex = new RegExp(pattern);
+                            if (!regex.hasMatch(value)) {
+                              return "Enter Valid Email";
+                            }
+
+                            return null;
                           },
                           lableTextField: "Enter Email",
                           hintTextField: "Enter your email Id",
@@ -72,36 +78,40 @@ class _LoginForm extends State<Login> {
                             MediaQuery.of(context).size.width / 8,
                         height: MediaQuery.of(context).size.height / 8,
                         child: TextFField(
-                          obscureTexts: !_showPassword,
-                          myController: password,
-                          aTextInputType: TextInputType.visiblePassword,
-                          maxLine: 1,
-                          maxLenthOfTextField: 15,
-                          lableTextField: "Enter Password",
-                          hintTextField: "Enter your password",
-                         suffixIcons: IconButton(
-                               icon: Icon(
-                             _showPassword? Icons.visibility: Icons.visibility_off,
-                             color: this._showPassword ? Colors.grey : Theme.of(context).iconTheme.color,
-                             ),
-                              onPressed: (){
-                               setState(() {
-                                    _showPassword=!_showPassword;
-                                  });
-                             },
-                             ),
-                          validInput:(value){
-                               if (value.isEmpty) {
-                                  return "Please Enter Password";
-                                }
-                                 Pattern pattern =
-                            r'^(?=.*[0-9]+.*)(?=.*[a-zA-Z]+.*)[0-9a-zA-Z]{6,}$';
-                           RegExp regex = new RegExp(pattern);
-                            if (!regex.hasMatch(value)){
-                              return 'Invalid password';
-                            }
-                            return null;
-                          })),
+                            obscureTexts: !_showPassword,
+                            myController: password,
+                            aTextInputType: TextInputType.visiblePassword,
+                            maxLine: 1,
+                            maxLenthOfTextField: 15,
+                            lableTextField: "Enter Password",
+                            hintTextField: "Enter your password",
+                            suffixIcons: IconButton(
+                              icon: Icon(
+                                _showPassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: this._showPassword
+                                    ? Colors.grey
+                                    : Theme.of(context).iconTheme.color,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _showPassword = !_showPassword;
+                                });
+                              },
+                            ),
+                            validInput: (value) {
+                              if (value.isEmpty) {
+                                return "Please Enter Password";
+                              }
+                              Pattern pattern =
+                                  r'^(?=.*[0-9]+.*)(?=.*[a-zA-Z]+.*)[0-9a-zA-Z]{6,}$';
+                              RegExp regex = new RegExp(pattern);
+                              if (!regex.hasMatch(value)) {
+                                return 'Invalid password';
+                              }
+                              return null;
+                            })),
                     SizedBox(height: MediaQuery.of(context).size.height / 40),
                     Container(
                         width: MediaQuery.of(context).size.width -
@@ -120,18 +130,19 @@ class _LoginForm extends State<Login> {
                             ),
                             onPressed: () {
                               if (loginFormKey.currentState.validate()) {
-                                signin(email.text, password.text, context).then((value) {
+                                signin(email.text, password.text, context)
+                                    .then((value) {
                                   if (value != null) {
-                                        Navigator.pushReplacement(
+                                    Navigator.pushReplacement(
                                         context,
-                                          MaterialPageRoute(
-                                          builder: (context) => Dashboard(uid: value.uid),
-                                  ));
-                                }}
-                               
-                                );
-                                Scaffold.of(context).showSnackBar(
-                                    SnackBar(content: Text('Processing Data')));
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              Dashboard(uid: value.uid),
+                                        ));
+                                  }
+                                });
+                                // Scaffold.of(context).showSnackBar(
+                                //     SnackBar(content: Text('Processing Data')));
                               }
                             })),
                   ]),
@@ -153,12 +164,22 @@ class _LoginForm extends State<Login> {
                       child: RaisedButton(
                           color: Colors.blue,
                           onPressed: () {
-                            googleSignIn().whenComplete(() async {
-                  auths.User user = await auth.currentUser;
-                   Navigator.of(context).pushReplacement(MaterialPageRoute(
-                      builder: (context) => Dashboard(uid: user.uid)));
-                          });},
-                        
+                            googleSignIn().then((value) async {
+                              if(value!=null){
+                                var names=value.displayName.split(" ");
+                                    this.aUser.firstName = names[0];
+                                    this.aUser.lastName = names[1];
+                                    this.aUser.mobileNumber = value.phoneNumber;
+                                    this.aUser.emailId = value.email;
+                               await this.firebaseUsers.doc(value.uid)
+                                    .set(this.aUser.toJson())
+                                    .then((value1) {Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          Dashboard(uid: value.uid)));
+                            });}});
+                            }
+                          ,
                           child: Row(
                             children: <Widget>[
                               Padding(
@@ -183,7 +204,6 @@ class _LoginForm extends State<Login> {
                           ),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)))),
-                  
                   SizedBox(height: MediaQuery.of(context).size.height / 40),
                   Container(
                       width: MediaQuery.of(context).size.width -
@@ -214,4 +234,5 @@ class _LoginForm extends State<Login> {
       ),
     );
   }
+
 }

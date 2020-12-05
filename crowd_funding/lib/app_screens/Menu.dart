@@ -8,10 +8,11 @@ import 'downloadImage.dart';
 import 'Dashboard.dart';
 import 'EditProfile.dart';
 import 'MyFundraise.dart';
-import 'My_Donation.dart';
+import 'MyDonation.dart';
 import 'Help_Support.dart';
 import 'Rewards.dart';
-
+import 'authentication.dart';
+import 'Login.dart';
 class Menu extends StatelessWidget {
   String uid;
   String name="UserName";
@@ -124,7 +125,7 @@ class Menu extends StatelessWidget {
                 ),
                 onTap: () {
                   Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => new FundraiseList("My Donation",uid)));
+                      MaterialPageRoute(builder: (context) => new MyDonation("My Donation",uid)));
                 },
               ),
               new ListTile(
@@ -179,8 +180,10 @@ class Menu extends StatelessWidget {
                       color: Colors.black),
                 ),
                 onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => Dashboard(uid: uid,)));
+                  signOutUser().then((value) {
+                    print("sign out");
+                    Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => Login()));});
                 },
               ),
             ],

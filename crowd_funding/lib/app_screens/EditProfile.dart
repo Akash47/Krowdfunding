@@ -277,7 +277,7 @@ class _EditProfile extends State<EditProfile> {
                                     ),
                                     onPressed: () {
                                      aFileStorage.uploadFile(_image, uid,
-                                      'ProfilePhotos' ,null);
+                                      'ProfilePhotos' ,null,null);
                                       if (editFormKey.currentState.validate()) {
                                         this.setUserDetail();
                                         this

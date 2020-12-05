@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crowd_funding/app_screens/Login.dart';
-import 'package:firebase_auth/firebase_auth.dart' as auths;
-import 'package:crowd_funding/common/successTick.dart';
+import 'package:crowd_funding/common/SuccessTick.dart';
 import 'package:crowd_funding/model/User.dart';
 import 'package:flutter/material.dart';
 import 'TextFField.dart';
@@ -225,20 +224,22 @@ class _RegistrartionForm extends State<Registration> {
                                 signUp(this.emailId.text, this.password.text,  context).then((value) {
                                    if(value != null){
                                      userId=value.uid;
-                                    }
-                                });
-                               
-                                this.setUserDetail();
-                                this.firebaseUsers.doc(userId)
+                                     this.setUserDetail();
+                                    this.firebaseUsers.doc(userId)
                                     .set(this.aUser.toJson())
-                                    .then((value) {
+                                    .then((value1) {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => new Login(),
+                                      builder: (context) => new SuccessTick(value.uid),
                                     ),
                                   );
                                 });
+                                    }
+                                   
+                                });
+                               
+                                
                               }
                             })),
                   ])

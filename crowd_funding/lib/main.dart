@@ -1,10 +1,8 @@
 import 'package:crowd_funding/app_screens/Dashboard.dart';
+import 'package:crowd_funding/app_screens/Logo.dart';
+import 'package:crowd_funding/app_screens/MyFundraiseDetailView.dart';
 import 'package:firebase_core/firebase_core.dart';
-// import 'package:flutter/material.dart';
-
 import 'package:flutter/material.dart';
-
-import 'app_screens/Logo.dart';
 
 bool USE_FIRESTORE_EMULATOR = false;
 void main() async {
@@ -33,7 +31,7 @@ class CrowdfundApp extends StatelessWidget {
           buttonColor: Color(0xffEA8724),
           scaffoldBackgroundColor: Color(0xff607D8B)),
       title: "Crowd Funding",
-      home: new Dashboard(uid: 'Skzv51vye3fcS8uawGuyBPW3hfD2',),
+      home: new Logo(),
     );
   }
 }
